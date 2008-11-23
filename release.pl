@@ -8,12 +8,14 @@ use warnings;
 use autodie qw(:default system);
 # needs IPC::System::Simple
 
-use File::Temp ();
-use File::Find  qw(find);
-use File::Slurp qw(read_file write_file);
-use File::Copy  qw(copy);
+use Cwd            ();
+use File::Basename ();
+use File::Copy     qw(copy);
+use File::Find     qw(find);
+use File::Slurp    qw(read_file write_file);
+use File::Temp     ();
 
-my $TRUNK = "http://svn.perlide.org/padre/trunk";
+my $TRUNK = "http://svn.perlide.org/padre/";
 my $TAGS  = "http://svn.perlide.org/padre/tags";
 my $error = 0;
 
@@ -21,17 +23,29 @@ my ($rev, $version, $tag) = @ARGV;
 die "Usage: $0 REV VERSION [--tag]\n"
 	if not $version or $version !~ /^\d\.\d\d$/ or $rev !~ /^\d+$/;
 
+my $start_dir = Cwd::cwd();
+my $name = File::Basename::basename($start_dir);
+#die "'$name'\n";
+if ($name eq 'trunk') {
+	$TRUNK .= 'trunk';
+	$name   = 'Padre';
+} else {
+	$TRUNK .= "projects/$name";
+}
+
 my $dir = File::Temp::tempdir( CLEANUP => 1 );
 chdir $dir;
 print "DIR $dir\n";
 
-_system("svn export --quiet -r$rev $TRUNK padre");
-chdir 'padre';
-_system("msgfmt -o share/locale/de.mo share/locale/de.po");
-# TODO add de.po to MANIFEST
-if (open my $fh, '>>', 'MANIFEST') {
-	print {$fh} "\nshare/locale/de.mo\n";
-	close $fh;
+_system("svn export --quiet -r$rev $TRUNK src");
+chdir 'src';
+
+if ($name eq 'Padre') {
+	_system("msgfmt -o share/locale/de.mo share/locale/de.po");
+	if (open my $fh, '>>', 'MANIFEST') {
+		print {$fh} "\nshare/locale/de.mo\n";
+		close $fh;
+	}
 }
 
 #print "Setting VERSION $version\n";
@@ -42,11 +56,11 @@ _system("$^X Build.PL");
 _system("$^X Build");
 _system("$^X Build test");
 _system("$^X Build dist");
-copy("Padre-$version.tar.gz", "/home/gabor/tmp") or die $!;
+copy("$name-$version.tar.gz", $start_dir) or die $!;
 if ($tag) {
-	_system("svn cp -r$rev $TRUNK $TAGS/Padre-$version -m'tag Padre-$version'");
+	_system("svn cp -r$rev $TRUNK $TAGS/$name-$version -m'tag $name-$version'");
 }
-chdir "/home/gabor/tmp";
+chdir $start_dir;
 
 
 sub check_version {
@@ -69,5 +83,5 @@ sub check_version {
 sub _system {
 	my $cmd = shift;
 	print "$cmd\n";
-	system $cmd;
+	system($cmd);
 }
