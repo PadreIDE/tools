@@ -15,9 +15,10 @@ use File::Find     qw(find);
 use File::Slurp    qw(read_file write_file);
 use File::Temp     ();
 
-my $TRUNK = "http://svn.perlide.org/padre/";
-my $TAGS  = "http://svn.perlide.org/padre/tags";
-my $error = 0;
+my $TRUNK   = "http://svn.perlide.org/padre/";
+my $TAGS    = "http://svn.perlide.org/padre/tags";
+my @LOCALES = qw(de ko);
+my $error   = 0;
 
 my ($rev, $version, $tag) = @ARGV;
 die "Usage: $0 REV VERSION [--tag]\n"
@@ -41,10 +42,12 @@ _system("svn export --quiet -r$rev $TRUNK src");
 chdir 'src';
 
 if ($name eq 'Padre') {
-	_system("msgfmt -o share/locale/de.mo share/locale/de.po");
-	if (open my $fh, '>>', 'MANIFEST') {
-		print {$fh} "\nshare/locale/de.mo\n";
-		close $fh;
+	for my $locale ( @LOCALES ) {
+		_system("msgfmt -o share/locale/$locale.mo share/locale/$locale.po");
+		if (open my $fh, '>>', 'MANIFEST') {
+			print {$fh} "\nshare/locale/$locale.mo\n";
+			close $fh;
+		}
 	}
 }
 
