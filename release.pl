@@ -17,7 +17,7 @@ use File::Temp     ();
 
 my $TRUNK   = "http://svn.perlide.org/padre/";
 my $TAGS    = "http://svn.perlide.org/padre/tags";
-my @LOCALES = qw(de hu ko);
+my @LOCALES = map { substr(File::Basename::basename($_), 0, -3) } glob "share/locale/*.po";
 my $error   = 0;
 
 my ($rev, $version, $tag) = @ARGV;
