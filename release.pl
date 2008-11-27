@@ -17,7 +17,7 @@ use File::Temp     ();
 
 my $TRUNK   = "http://svn.perlide.org/padre/";
 my $TAGS    = "http://svn.perlide.org/padre/tags";
-my @LOCALES = qw(de ko);
+my @LOCALES = qw(de hu ko);
 my $error   = 0;
 
 my ($rev, $version, $tag) = @ARGV;
