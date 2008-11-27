@@ -42,12 +42,14 @@ _system("svn export --quiet -r$rev $TRUNK src");
 chdir 'src';
 
 if ($name eq 'Padre') {
-	for my $locale ( @LOCALES ) {
-		_system("msgfmt -o share/locale/$locale.mo share/locale/$locale.po");
-		if (open my $fh, '>>', 'MANIFEST') {
+	if (open my $fh, '>>', 'MANIFEST') {
+		for my $locale ( @LOCALES ) {
+			_system("msgfmt -o share/locale/$locale.mo share/locale/$locale.po");
 			print {$fh} "\nshare/locale/$locale.mo\n";
-			close $fh;
 		}
+		close $fh;
+	} else {
+		die "Cannot open MANIFEST for appending: $!";
 	}
 }
 
