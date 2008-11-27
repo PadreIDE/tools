@@ -58,6 +58,7 @@ die if $error;
 _system("$^X Build.PL");
 _system("$^X Build");
 _system("$^X Build test");
+_system("$^X Build disttest");
 _system("$^X Build dist");
 copy("$name-$version.tar.gz", $start_dir) or die $!;
 if ($tag) {
