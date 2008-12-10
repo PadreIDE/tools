@@ -15,9 +15,8 @@ use File::Find     qw(find);
 use File::Slurp    qw(read_file write_file);
 use File::Temp     ();
 
-my $TRUNK   = "http://svn.perlide.org/padre/";
+my $TRUNK   = "http://svn.perlide.org/padre/trunk/";
 my $TAGS    = "http://svn.perlide.org/padre/tags";
-my @LOCALES = map { substr(File::Basename::basename($_), 0, -3) } glob "share/locale/*.po";
 my $error   = 0;
 
 my ($rev, $version, $tag) = @ARGV;
@@ -27,12 +26,7 @@ die "Usage: $0 REV VERSION [--tag]\n"
 my $start_dir = Cwd::cwd();
 my $name = File::Basename::basename($start_dir);
 #die "'$name'\n";
-if ($name eq 'trunk') {
-	$TRUNK .= 'trunk';
-	$name   = 'Padre';
-} else {
-	$TRUNK .= "projects/$name";
-}
+$TRUNK .= $name;
 
 my $dir = File::Temp::tempdir( CLEANUP => 1 );
 chdir $dir;
@@ -42,14 +36,9 @@ _system("svn export --quiet -r$rev $TRUNK src");
 chdir 'src';
 
 if ($name eq 'Padre') {
-	if (open my $fh, '>>', 'MANIFEST') {
-		for my $locale ( @LOCALES ) {
-			_system("msgfmt -o share/locale/$locale.mo share/locale/$locale.po");
-			print {$fh} "\nshare/locale/$locale.mo\n";
-		}
-		close $fh;
-	} else {
-		die "Cannot open MANIFEST for appending: $!";
+	my @LOCALES = map { substr(File::Basename::basename($_), 0, -3) } glob "share/locale/*.po";
+	for my $locale ( @LOCALES ) {
+		_system("msgfmt -o share/locale/$locale.mo share/locale/$locale.po");
 	}
 }
 
@@ -57,11 +46,12 @@ if ($name eq 'Padre') {
 find(\&check_version, 'lib');
 die if $error;
 
-_system("$^X Build.PL");
-_system("$^X Build");
-_system("$^X Build test");
-_system("$^X Build disttest");
-_system("$^X Build dist");
+_system("$^X Makefile.PL");
+_system("make");
+_system("make manifest");
+_system("make test");
+_system("make disttest");
+_system("make dist");
 copy("$name-$version.tar.gz", $start_dir) or die $!;
 if ($tag) {
 	_system("svn cp -r$rev $TRUNK $TAGS/$name-$version -m'tag $name-$version'");
