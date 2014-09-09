@@ -228,7 +228,7 @@ Setup:
    where free registration required)
   
   Manually check out the svn repository of Padre:
-  svn co  http://svn.perlide.org/padre/trunk/Padre
+  svn co  https://github.com/PadreIDE/Padre
 
  
   Make sure all the prereqisites are installed
